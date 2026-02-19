@@ -1,0 +1,3 @@
+if __name__ == '__main__':
+    print("Welcome to the AI agent application!")
+    # Add your AI agent code here...

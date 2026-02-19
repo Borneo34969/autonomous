@@ -1,47 +1,48 @@
-import sqlite3
+import json
 
 class Database:
-    def __init__(self, db_name):
-        """
-        Initializes the database connection.
-        :param db_name: Name of the SQLite database file.
-        """
-        self.connection = sqlite3.connect(db_name)
-        self.cursor = self.connection.cursor()
+    def __init__(self, filename='tasks.json'):
+        self.filename = filename
+        self.load_tasks()
 
-    def create_table(self, table_name, columns):
-        """
-        Creates a table with the given name and columns.
-        :param table_name: Name of the table.
-        :param columns: A string of column definitions.
-        """
-        query = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns})"
-        self.cursor.execute(query)
-        self.connection.commit()
+    def load_tasks(self):
+        try:
+            with open(self.filename, 'r') as f:
+                self.tasks = json.load(f)
+        except FileNotFoundError:
+            self.tasks = []
 
-    def insert(self, table_name, data):
-        """
-        Inserts data into the specified table.
-        :param table_name: Name of the table.
-        :param data: A dictionary of column/value pairs to insert.
-        """
-        columns = ', '.join(data.keys())
-        placeholders = ', '.join('?' * len(data))
-        query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
-        self.cursor.execute(query, tuple(data.values()))
-        self.connection.commit()
+    def save_tasks(self):
+        with open(self.filename, 'w') as f:
+            json.dump(self.tasks, f, indent=4)
 
-    def query(self, query, parameters=None):
-        """
-        Executes a query and returns the results.
-        :param query: SQL query to execute.
-        :param parameters: Optional parameters for the query.
-        """
-        self.cursor.execute(query, parameters or [])
-        return self.cursor.fetchall()
+    def add_task(self, task):
+        self.tasks.append(task)
+        self.save_tasks()
 
-    def close(self):
-        """
-        Closes the database connection.
-        """
-        self.connection.close()
+    def get_all_tasks(self):
+        return self.tasks
+
+    def get_task(self, task_id):
+        for task in self.tasks:
+            if task['id'] == task_id:
+                return task
+        return None
+
+    def update_task(self, task_id, updated_task):
+        for index, task in enumerate(self.tasks):
+            if task['id'] == task_id:
+                self.tasks[index] = updated_task
+                self.save_tasks()
+                return True
+        return False
+
+    def delete_task(self, task_id):
+        self.tasks = [task for task in self.tasks if task['id'] != task_id]
+        self.save_tasks()
+
+    def get_tasks_by_status(self, status):
+        return [task for task in self.tasks if task['status'] == status]
+
+    def get_tasks_by_priority(self, priority):
+        return [task for task in self.tasks if task['priority'] == priority]

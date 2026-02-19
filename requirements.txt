@@ -1,0 +1,9 @@
+# Requirements for AI Agent Framework
+
+numpy
+pandas
+scikit-learn
+tensorflow
+keras
+flask
+django
